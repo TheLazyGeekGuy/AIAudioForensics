@@ -181,6 +181,111 @@ F --> G[Decision & Risk Scoring]
 
 ---
 
+## 11 – SubmitHub AI Song Checker
+
+### Overview
+
+The **AI Song Checker** is an experimental classifier developed by **Jason Grishkoff** (SubmitHub) that estimates whether a music track is AI-generated or human-made.  
+It is built using a **Random Forest Classifier**, trained on a balanced dataset (~4,000 samples) combining both AI-generated and human-composed songs.
+
+**Accuracy:** ~90% on the test set.  
+**Limitations:** quality-dependent, genre bias, and reduced efficiency on post-mastered or mixed (AI + human) tracks.
+
+---
+
+### ⚙️ Model Architecture
+
+#### Classifier
+- **Type:** Random Forest (binary classification)
+- **Target:** “AI-Generated” vs “Human-Made”
+- **Input:** Statistical audio descriptors
+- **Output:** Probability score (0–1)
+
+#### Training Data
+
+| Type | Quantity | Source | Comment |
+|------|-----------|---------|----------|
+| AI-Generated | ~2,000 | Various (Suno, Udio, etc.) | Includes instrumental + vocal tracks |
+| Human-Made | ~2,000 | Publicly released songs | Balanced dataset |
+
+Balanced dataset ensures the model avoids class bias and generalizes better across sources.
+
+---
+
+### 🎛 Feature Extraction Pipeline
+
+The system extracts **21 low- to mid-level descriptors** across three analytical domains:
+
+#### 1. Spectral Features
+
+| Feature | Description |
+|----------|--------------|
+| Spectral Flatness | Differentiates tonal vs. noise-like signals |
+| Spectral Rolloff | Frequency threshold containing most spectral energy |
+| RMS Energy | Average loudness level |
+| Zero Crossing Rate | Waveform polarity change frequency |
+| MFCC Statistics | Mel-frequency cepstral coefficients summarizing timbre |
+
+#### 2. Harmonic Analysis
+
+| Feature | Description |
+|----------|-------------|
+| Phase Coherence | Temporal stability of phase relationships |
+| Frequency Band Ratios | Energy distribution across low/mid/high bands |
+| Harmonic Consistency | Persistence of harmonic structure |
+| Harmonic Stability | Time-based steadiness of harmonic content |
+| Pitch Transition Rate | Velocity of pitch movement |
+| Harmonic Complexity | Density of harmonic variations |
+| Vocals/Music Ratio | Energy ratio between vocal and instrumental sources |
+
+#### 3. Long-Range Temporal Patterns
+
+- Cross-sectional correlation over **1, 2, and 3-minute windows**
+- Computes:
+  - **Variance**, **standard deviation**, **correlation coefficients**
+  - Long-term structure stability and section coherence
+
+These parameters approximate the *temporal logic* that human composition tends to follow, as opposed to the statistically homogeneous textures often observed in AI-generated material.
+
+---
+
+### 🧩 Limitations & Biases
+
+| Limitation | Impact |
+|-------------|--------|
+| Short or long tracks (<32s or >3min) | Inconsistent features |
+| Low bitrate (<196 kbps) | Unreliable spectral data |
+| Genre bias | Some genres (jazz, ambient) deviate from training set patterns |
+| Mastered AI tracks | Human mastering masks artefacts |
+| Mixed sources (AI vocals + human instrumental) | Confuses classifier |
+| Instrumental-only tracks | Fewer vocal-related metrics → less accurate |
+
+---
+
+### 🔬 Observations & Relevance
+
+- The **AI Song Checker** uses a **feature-based deterministic classifier**, unlike deep models (CNN, spectrogram Transformers) used by **SONICS**, **Deezer DetectAI**, or **Udio internal filters**.  
+- Its design confirms that *AI fingerprinting* is primarily detectable via:
+  - **Spectral uniformity**
+  - **Phase alignment regularities**
+  - **Reduced harmonic entropy**
+  - **Unnatural coherence over time windows**
+
+These patterns match those observed in other academic works (e.g., *SONICS*, 2023) — especially the spectral smoothness and low-variance dynamics typical of AI generation pipelines.
+
+---
+
+### 🧠 Future Improvements (v4.0 ideas)
+
+- Larger dataset (×10)  
+- GPU-based inference  
+- Separate model for vocals vs. instruments  
+- Persistent user history tracking  
+- Retraining with new AI models (Udio v3, Suno v4, Mubert, etc.)
+
+
+---
+
 ## 11. References
 
 - Bittner, R. et al. (2022) *Temporal Analysis of AI Music*. [arXiv:2207.04652](https://arxiv.org/abs/2207.04652)  
@@ -191,6 +296,9 @@ F --> G[Decision & Risk Scoring]
 - IFPI (2023). *ISRC Handbook*. [isrc.ifpi.org](https://isrc.ifpi.org/en/)  
 - Librosa Docs: [https://librosa.org](https://librosa.org)  
 - Transformer Audio Fingerprinting (2025). [arXiv:2503.01845](https://arxiv.org/abs/2503.01845)
+- Jason Grishkoff, “AI Song Checker,” *SubmitHub Blog* (2024).  
+  [https://www.submithub.com/ai-song-checker](https://www.submithub.com/ai-song-checker)  
+- Ben Jordan (YouTube): “AI Music Detector Experiment,” 2024.  
 
 ---
 
